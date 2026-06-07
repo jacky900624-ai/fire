@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逆止閥檢查系統 - Check Valve Inspection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e0f2f7 0%, #b8e0f2 50%, #9fd3e8 100%);
+            min-height: 100vh;
+            color: #1e3a5f;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #006994 0%, #008fb3 50%, #00a8cc 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 105, 148, 0.3);
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #e6f4f8 100%);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 105, 148, 0.15);
+            border-left: 5px solid #008fb3;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #006994;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00a8cc;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 105, 148, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #008fb3 0%, #00a8cc 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 143, 179, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 143, 179, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 105, 148, 0.15);
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #006994 0%, #008fb3 100%);
+            color: white;
+        }
+
+        th {
+            padding: 18px 12px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #e0f2f7;
+        }
+
+        tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: #f0f9fc;
+            transform: scale(1.01);
+        }
+
+        tbody tr.locked-risk {
+            background: linear-gradient(90deg, #fff5e6 0%, #ffe8cc 100%);
+            border-left: 4px solid #ff9500;
+            animation: pulse-warning 2s infinite;
+        }
+
+        @keyframes pulse-warning {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 149, 0, 0); }
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #b8e0f2;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: #f8fdff;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #008fb3;
+            box-shadow: 0 0 0 3px rgba(0, 143, 179, 0.1);
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            font-size: 0.9em;
+        }
+
+        .status-normal {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            animation: status-pulse-green 2s infinite;
+        }
+
+        .status-abnormal {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            animation: status-pulse-red 2s infinite;
+        }
+
+        @keyframes status-pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+        }
+
+        @keyframes status-pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+        }
+
+        .locked-badge {
+            background: linear-gradient(135deg, #ff9500 0%, #ff6b35 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin-left: 8px;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+            color: #006994;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1e3a5f;
+            font-weight: 600;
+        }
+
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); }
+            to { transform: translateX(0); }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            border-left: 4px solid #17a2b8;
+            color: #0c5460;
+        }
+
+        @media print {
+            .no-print { display: none; }
+            body { background: white; }
+            table { box-shadow: none; }
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 0.85em;
+            }
+            th, td {
+                padding: 8px 5px;
+            }
+            .input-field {
+                padding: 6px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 逆止閥檢查系統</h1>
+            <p>Check Valve Inspection System - 自動計算與數據保存</p>
+        </header>
+
+        <div class="stats-panel">
+            <div class="stat-card">
+                <h3>總檢查點數</h3>
+                <div class="number" id="totalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>正常</h3>
+                <div class="number" id="normalCount" style="color: #28a745;">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>異常</h3>
+                <div class="number" id="abnormalCount" style="color: #dc3545;">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>反鎖風險</h3>
+                <div class="number" id="lockedRiskCount" style="color: #ff9500;">0</div>
+            </div>
+        </div>
+
+        <div class="alert alert-info" id="infoAlert">
+            💡 提示：下方壓力值必須小於上方壓力值才算正常。系統會自動保存您的數據。
+        </div>
+
+        <div class="control-panel no-print">
+            <h3 style="margin-bottom: 15px; color: #006994;">操作面板</h3>
+            <button class="btn btn-success" onclick="addNewRow()">➕ 新增檢查點</button>
+            <button class="btn" onclick="calculateAll()">🔄 重新計算</button>
+            <button class="btn btn-warning" onclick="exportData()">📥 匯出數據</button>
+            <button class="btn" onclick="importData()">📤 匯入數據</button>
+            <button class="btn btn-danger" onclick="clearAllData()">🗑️ 清除所有數據</button>
+            <button class="btn" onclick="window.print()">🖨️ 列印報表</button>
+        </div>
+
+        <table id="inspectionTable">
+            <thead>
+                <tr>
+                    <th width="5%">編號</th>
+                    <th width="10%">系統</th>
+                    <th width="30%">位置</th>
+                    <th width="12%">檢查數值<br><small>下方</small></th>
+                    <th width="12%">檢查數值<br><small>上方</small></th>
+                    <th width="15%">檢查結果</th>
+                    <th width="16%" class="no-print">操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- 數據將通過JavaScript動態生成 -->
+            </tbody>
+        </table>
+
+        <div class="auto-save-indicator" id="autoSaveIndicator">
+            ✓ 已自動保存
+        </div>
+    </div>
+
+    <!-- 新增檢查點模態框 -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>新增檢查點</h2>
+            </div>
+            <div class="form-group">
+                <label>系統類型</label>
+                <select class="input-field" id="newSystem">
+                    <option value="撒水">撒水</option>
+                    <option value="泡沫">泡沫</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>位置</label>
+                <input type="text" class="input-field" id="newLocation" placeholder="輸入位置描述">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="newLockedRisk"> 
+                    可能有反鎖風險
+                </label>
+            </div>
+            <div style="text-align: right;">
+                <button class="btn" onclick="closeModal()">取消</button>
+                <button class="btn btn-success" onclick="confirmAdd()">確認新增</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="importFile" style="display: none;" accept=".json" onchange="handleFileImport(event)">
+
+    <script>
+        // 初始化數據
+        let inspectionData = [];
+        const STORAGE_KEY = 'checkValveInspectionData';
+
+        // 頁面加載時恢復數據
+        window.onload = function() {
+            loadData();
+            if (inspectionData.length === 0) {
+                // 初始化示例數據
+                loadDefaultData();
+            }
+            renderTable();
+            calculateAll();
+            showAutoSave();
+        };
+
+        // 加載默認數據（根據圖片）
+        function loadDefaultData() {
+            inspectionData = [
+                { id: 1, system: '撒水', location: 'B1-B梯內(消防機房旁)', lower: '', upper: '', lockedRisk: false },
+                { id: 2, system: '撒水', location: 'B1-C梯內(收貨區旁下去)', lower: '', upper: '', lockedRisk: false },
+                { id: 3, system: '撒水', location: 'B1-C梯內(收貨區旁下去)', lower: '', upper: '', lockedRisk: false },
+                { id: 4, system: '撒水', location: 'B1-D梯內(B1顧客廁所)', lower: '', upper: '', lockedRisk: true },
+                { id: 5, system: '撒水', location: 'B1-E梯廳(日榮本鋪)', lower: '', upper: '', lockedRisk: false },
+                { id: 6, system: '泡沫', location: '1F員工機車停車場區', lower: '', upper: '', lockedRisk: false },
+                { id: 7, system: '撒水', location: '1F-B梯內(靠近家電那邊)', lower: '', upper: '', lockedRisk: false },
+                { id: 8, system: '撒水', location: '1F-收貨區側(倉庫)(收貨區旁邊的門)', lower: '', upper: '', lockedRisk: false },
+                { id: 9, system: '撒水', location: '1F-收貨區側(迪卡儂)(收貨區旁邊的門)', lower: '', upper: '', lockedRisk: false },
+                { id: 10, system: '撒水', location: '1F-D梯內(1F顧客廁所，蜂鳴器會叫的)', lower: '', upper: '', lockedRisk: false },
+                { id: 11, system: '撒水', location: '1F-E梯內(甜甜圈旁)', lower: '', upper: '', lockedRisk: true },
+                { id: 12, system: '撒水', location: '1F美商入口第一櫃(168寢具內)', lower: '', upper: '', lockedRisk: false },
+                { id: 13, system: '泡沫', location: '2F-18機房內(電氣室)(汽車工坊旁)', lower: '', upper: '', lockedRisk: false },
+                { id: 14, system: '泡沫', location: '2F-D梯側(親子車位旁)', lower: '', upper: '', lockedRisk: false },
+                { id: 15, system: '泡沫', location: '2F-E梯前方(入口電動門旁)', lower: '', upper: '', lockedRisk: false },
+                { id: 16, system: '撒水', location: '2F門廳(廁所旁)', lower: '', upper: '', lockedRisk: false },
+                { id: 17, system: '撒水', location: '3F門廳(廁所旁)', lower: '', upper: '', lockedRisk: false }
+            ];
+            saveData();
+        }
+
+        // 渲染表格
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            inspectionData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                if (row.lockedRisk) {
+                    tr.className = 'locked-risk';
+                }
+
+                const lockedBadge = row.lockedRisk ? '<span class="locked-badge">⚠️ 可能被反鎖</span>' : '';
+
+                tr.innerHTML = `
+                    <td>${row.id}</td>
+                    <td>${row.system}</td>
+                    <td>${row.location} ${lockedBadge}</td>
+                    <td>
+                        <input type="number" step="0.1" class="input-field" 
+                               id="lower_${row.id}" value="${row.lower}" 
+                               onchange="updateValue(${row.id}, 'lower', this.value)"
+                               placeholder="輸入下方值">
+                    </td>
+                    <td>
+                        <input type="number" step="0.1" class="input-field" 
+                               id="upper_${row.id}" value="${row.upper}" 
+                               onchange="updateValue(${row.id}, 'upper', this.value)"
+                               placeholder="輸入上方值">
+                    </td>
+                    <td>
+                        <span id="status_${row.id}" class="status-badge status-normal">待檢查</span>
+                    </td>
+                    <td class="no-print">
+                        <button class="btn" style="padding: 6px 12px; font-size: 0.85em;" 
+                                onclick="toggleLockedRisk(${row.id})">
+                            ${row.lockedRisk ? '✓ 已標記' : '標記反鎖'}
+                        </button>
+                        <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.85em;" 
+                                onclick="deleteRow(${row.id})">
+                            刪除
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 更新數值
+        function updateValue(id, field, value) {
+            const row = inspectionData.find(r => r.id === id);
+            if (row) {
+                row[field] = value === '' ? '' : parseFloat(value);
+                saveData();
+                calculateRow(id);
+                updateStatistics();
+            }
+        }
+
+        // 計算單行
+        function calculateRow(id) {
+            const row = inspectionData.find(r => r.id === id);
+            if (!row) return;
+
+            const statusEl = document.getElementById(`status_${id}`);
+            
+            if (row.lower === '' || row.upper === '') {
+                statusEl.textContent = '待檢查';
+                statusEl.className = 'status-badge status-normal';
+                return;
+            }
+
+            // 檢查邏輯：下方必須小於上方才算正常
+            if (row.lower < row.upper) {
+                statusEl.textContent = '✓ 正常';
+                statusEl.className = 'status-badge status-normal';
+            } else {
+                statusEl.textContent = '✗ 異常';
+                statusEl.className = 'status-badge status-abnormal';
+            }
+        }
+
+        // 計算所有
+        function calculateAll() {
+            inspectionData.forEach(row => calculateRow(row.id));
+            updateStatistics();
+        }
+
+        // 更新統計
+        function updateStatistics() {
+            const total = inspectionData.length;
+            let normal = 0;
+            let abnormal = 0;
+            let lockedRisk = 0;
+
+            inspectionData.forEach(row => {
+                if (row.lockedRisk) lockedRisk++;
+                
+                if (row.lower !== '' && row.upper !== '') {
+                    if (row.lower < row.upper) {
+                        normal++;
+                    } else {
+                        abnormal++;
+                    }
+                }
+            });
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('normalCount').textContent = normal;
+            document.getElementById('abnormalCount').textContent = abnormal;
+            document.getElementById('lockedRiskCount').textContent = lockedRisk;
+        }
+
+        // 新增行
+        function addNewRow() {
+            document.getElementById('addModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('addModal').style.display = 'none';
+            document.getElementById('newLocation').value = '';
+            document.getElementById('newLockedRisk').checked = false;
+        }
+
+        function confirmAdd() {
+            const system = document.getElementById('newSystem').value;
+            const location = document.getElementById('newLocation').value;
+            const lockedRisk = document.getElementById('newLockedRisk').checked;
+
+            if (!location.trim()) {
+                alert('請輸入位置');
+                return;
+            }
+
+            const newId = inspectionData.length > 0 ? Math.max(...inspectionData.map(r => r.id)) + 1 : 1;
+            
+            inspectionData.push({
+                id: newId,
+                system: system,
+                location: location,
+                lower: '',
+                upper: '',
+                lockedRisk: lockedRisk
+            });
+
+            saveData();
+            renderTable();
+            closeModal();
+            showAutoSave();
+        }
+
+        // 刪除行
+        function deleteRow(id) {
+            if (confirm('確定要刪除此檢查點嗎？')) {
+                inspectionData = inspectionData.filter(r => r.id !== id);
+                saveData();
+                renderTable();
+                updateStatistics();
+                showAutoSave();
+            }
+        }
+
+        // 切換反鎖風險標記
+        function toggleLockedRisk(id) {
+            const row = inspectionData.find(r => r.id === id);
+            if (row) {
+                row.lockedRisk = !row.lockedRisk;
+                saveData();
+                renderTable();
+                updateStatistics();
+                showAutoSave();
+            }
+        }
+
+        // 保存數據到localStorage
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(inspectionData));
+        }
+
+        // 從localStorage加載數據
+        function loadData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                inspectionData = JSON.parse(saved);
+            }
+        }
+
+        // 顯示自動保存提示
+        function showAutoSave() {
+            const indicator = document.getElementById('autoSaveIndicator');
+            indicator.style.display = 'block';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 2000);
+        }
+
+        // 匯出數據
+        function exportData() {
+            const dataStr = JSON.stringify(inspectionData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `逆止閥檢查數據_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('數據已匯出！');
+        }
+
+        // 匯入數據
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        if (confirm(`確定要匯入 ${importedData.length} 筆數據嗎？這將覆蓋現有數據。`)) {
+                            inspectionData = importedData;
+                            saveData();
+                            renderTable();
+                            calculateAll();
+                            alert('數據匯入成功！');
+                        }
+                    } else {
+                        alert('數據格式錯誤！');
+                    }
+                } catch (error) {
+                    alert('文件讀取失敗：' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // 清除所有數據
+        function clearAllData() {
+            if (confirm('⚠️ 警告：確定要清除所有數據嗎？此操作無法復原！')) {
+                if (confirm('再次確認：所有數據將被永久刪除！')) {
+                    inspectionData = [];
+                    localStorage.removeItem(STORAGE_KEY);
+                    renderTable();
+                    updateStatistics();
+                    alert('所有數據已清除');
+                }
+            }
+        }
+
+        // 防止意外關閉
+        window.onbeforeunload = function() {
+            saveData();
+            return "系統會自動保存數據，確定要離開嗎？";
+        };
+
+        // 點擊模態框外部關閉
+        window.onclick = function(event) {
+            const modal = document.getElementById('addModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
